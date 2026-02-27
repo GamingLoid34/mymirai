@@ -54,7 +54,7 @@
 **Tasks**
 - [x] Skapa `MedcalcLandingPage`.
 - [x] Lägg två val: Träna / Tentamode.
-- [x] Skapa separata placeholdersidor för båda lägen.
+- [x] Skapa separata fungerande sidor för båda lägen.
 
 ---
 
@@ -62,21 +62,21 @@
 
 ### Story 3.1 - Deterministisk motor
 **Tasks**
-- [ ] Skapa motor med decimal/fixed-point.
-- [ ] Definiera formelset v1 (mg/kg, mg/ml->ml, ml/h, C1V1=C2V2).
-- [ ] Bygg dubbelberäkning (metod A/B) och mismatch-spärr.
+- [x] Skapa motor med decimal/fixed-point.
+- [x] Definiera formelset v1 (mg/kg, mg/ml->ml, ml/h, C1V1=C2V2).
+- [x] Bygg dubbelberäkning (metod A/B) och mismatch-spärr.
 
 ### Story 3.2 - Validering och enheter
 **Tasks**
-- [ ] Tvingade enheter i inputschema.
-- [ ] Rimlighetskontroller och tydliga fel.
-- [ ] Stoppa beräkning vid ofullständiga/inkonsekventa värden.
+- [x] Tvingade enheter i inputschema.
+- [x] Rimlighetskontroller och tydliga fel.
+- [x] Stoppa beräkning vid ofullständiga/inkonsekventa värden.
 
 ### Story 3.3 - Träna/Tentamode-funktionalitet
 **Tasks**
 - [ ] Frågebank i Firestore med facit och metadata.
-- [ ] Träna med stegförklaring.
-- [ ] Tentamode med poäng och tidtagning.
+- [x] Träna med stegförklaring.
+- [x] Tentamode med poäng och tidtagning.
 
 ---
 
@@ -84,8 +84,8 @@
 
 ### Story 4.1 - Dataloggning
 **Tasks**
-- [ ] Lägg till `medcalc_sessions`.
-- [ ] Lägg till `medcalc_attempts` med inputs/resultat/versionsfält.
+- [x] Lägg till `medcalc_sessions`.
+- [x] Lägg till `medcalc_attempts` med inputs/resultat/versionsfält.
 
 ### Story 4.2 - Test och CI-gates
 **Tasks**
