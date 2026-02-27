@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:my_mirai/core/app_theme.dart';
 import 'package:my_mirai/core/models.dart';
 import 'package:my_mirai/features/medcalc/medcalc_engine.dart';
+import 'package:my_mirai/features/medcalc/medcalc_repository.dart';
 
 class NursingProgramPage extends StatelessWidget {
   final AppUser currentUser;
@@ -87,10 +88,24 @@ class NursingProgramPage extends StatelessWidget {
   }
 }
 
-class MedcalcLandingPage extends StatelessWidget {
+class MedcalcLandingPage extends StatefulWidget {
   final AppUser currentUser;
 
   const MedcalcLandingPage({super.key, required this.currentUser});
+
+  @override
+  State<MedcalcLandingPage> createState() => _MedcalcLandingPageState();
+}
+
+class _MedcalcLandingPageState extends State<MedcalcLandingPage> {
+  final _repository = MedcalcRepository();
+  late Future<String> _formulaVersionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _formulaVersionFuture = _repository.fetchActiveFormulaVersion();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +126,24 @@ class MedcalcLandingPage extends StatelessWidget {
                 'Utbildningsläge: slutsvar beräknas endast med regelstyrd motor (ingen AI) och dubbelverifiering A/B.',
               ),
             ),
+            const SizedBox(height: 10),
+            FutureBuilder<String>(
+              future: _formulaVersionFuture,
+              builder: (context, snapshot) {
+                final version = snapshot.data ?? MedcalcRepository.localFormulaVersion;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Aktiv formelversion: $version',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 18),
             _ModeCard(
               title: 'Träna',
@@ -118,7 +151,7 @@ class MedcalcLandingPage extends StatelessWidget {
               icon: Icons.school_rounded,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => MedcalcPracticePage(currentUser: currentUser),
+                  builder: (_) => MedcalcPracticePage(currentUser: widget.currentUser),
                 ),
               ),
             ),
@@ -129,7 +162,7 @@ class MedcalcLandingPage extends StatelessWidget {
               icon: Icons.timer_rounded,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => MedcalcExamPage(currentUser: currentUser),
+                  builder: (_) => MedcalcExamPage(currentUser: widget.currentUser),
                 ),
               ),
             ),
@@ -490,6 +523,7 @@ class MedcalcExamPage extends StatefulWidget {
 }
 
 class _MedcalcExamPageState extends State<MedcalcExamPage> {
+  final _repository = MedcalcRepository();
   final _answerController = TextEditingController();
   final _stopwatch = Stopwatch();
   Timer? _ticker;
@@ -501,6 +535,8 @@ class _MedcalcExamPageState extends State<MedcalcExamPage> {
   bool? _lastCorrect;
   bool _submitted = false;
   bool _completed = false;
+  bool _loadingQuestions = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -516,15 +552,30 @@ class _MedcalcExamPageState extends State<MedcalcExamPage> {
     super.dispose();
   }
 
-  void _startNewSession() {
-    _questions = MedcalcExamFactory.generate(count: 8);
+  Future<void> _startNewSession() async {
+    setState(() {
+      _loadingQuestions = true;
+      _loadError = null;
+      _completed = false;
+      _submitted = false;
+      _feedback = null;
+      _lastCorrect = null;
+      _answerController.clear();
+    });
+
+    late List<MedcalcExamQuestion> loadedQuestions;
+    try {
+      loadedQuestions = await _repository.fetchExamQuestions(count: 8);
+    } catch (e) {
+      _loadError = 'Kunde inte hämta frågebank: $e';
+      loadedQuestions = MedcalcExamFactory.generate(count: 8);
+    }
+
+    if (!mounted) return;
+    _questions = loadedQuestions;
     _index = 0;
     _score = 0;
-    _feedback = null;
-    _lastCorrect = null;
-    _submitted = false;
-    _completed = false;
-    _answerController.clear();
+
     _ticker?.cancel();
     _stopwatch
       ..reset()
@@ -532,7 +583,9 @@ class _MedcalcExamPageState extends State<MedcalcExamPage> {
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
-    setState(() {});
+    setState(() {
+      _loadingQuestions = false;
+    });
   }
 
   MedcalcExamQuestion get _currentQuestion => _questions[_index];
@@ -651,7 +704,30 @@ class _MedcalcExamPageState extends State<MedcalcExamPage> {
       appBar: AppBar(title: const Text('Tentamode - Läkemedelsberäkning')),
       body: Container(
         decoration: BoxDecoration(gradient: AppTheme.pageGradient),
-        child: _completed ? _buildSummary(context) : _buildQuestionView(context),
+        child: _loadingQuestions
+            ? _buildLoadingView(context)
+            : (_completed ? _buildSummary(context) : _buildQuestionView(context)),
+      ),
+    );
+  }
+
+  Widget _buildLoadingView(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 14),
+            Text(
+              _loadError == null
+                  ? 'Laddar tentafrågor...'
+                  : 'Frågebank kunde inte laddas, använder lokal fallback.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -663,6 +739,17 @@ class _MedcalcExamPageState extends State<MedcalcExamPage> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        if (_loadError != null) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.16),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(_loadError!),
+          ),
+          const SizedBox(height: 10),
+        ],
         Row(
           children: [
             Text(

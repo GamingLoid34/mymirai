@@ -7,6 +7,13 @@ enum MedcalcFormulaType {
   dilutionC1V1EqualsC2V2,
 }
 
+MedcalcFormulaType? medcalcFormulaTypeFromCode(String code) {
+  for (final value in MedcalcFormulaType.values) {
+    if (value.shortCode == code) return value;
+  }
+  return null;
+}
+
 extension MedcalcFormulaTypeX on MedcalcFormulaType {
   String get label {
     switch (this) {

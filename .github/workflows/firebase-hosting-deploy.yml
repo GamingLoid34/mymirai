@@ -27,6 +27,11 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      - name: Run medcalc quality gates
+        run: |
+          flutter test test/medcalc_engine_test.dart
+          flutter test test/widget_test.dart
+
       - name: Build Flutter web release
         run: flutter build web --release
 

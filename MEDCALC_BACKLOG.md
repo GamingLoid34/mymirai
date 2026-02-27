@@ -74,7 +74,7 @@
 
 ### Story 3.3 - Träna/Tentamode-funktionalitet
 **Tasks**
-- [ ] Frågebank i Firestore med facit och metadata.
+- [x] Frågebank i Firestore med facit och metadata.
 - [x] Träna med stegförklaring.
 - [x] Tentamode med poäng och tidtagning.
 
@@ -89,6 +89,6 @@
 
 ### Story 4.2 - Test och CI-gates
 **Tasks**
-- [ ] Golden testbank med facit.
-- [ ] Krav: 100% pass innan deploy.
-- [ ] Blockera release vid mismatch eller osäker validering.
+- [x] Golden testbank med facit.
+- [x] Krav: 100% pass innan deploy.
+- [x] Blockera release vid mismatch eller osäker validering.
