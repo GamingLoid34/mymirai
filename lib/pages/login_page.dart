@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_mirai/core/app_theme.dart';
 import 'package:my_mirai/core/models.dart';
@@ -20,26 +19,10 @@ class _LoginPageState extends State<LoginPage> {
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _restoreExistingGoogleSession();
-  }
-
-  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _restoreExistingGoogleSession() async {
-    try {
-      final user = await AuthService.getSignedInAppUser();
-      if (!mounted || user == null) return;
-      _goToHome(user);
-    } catch (_) {
-      // Ignorera tyst om session inte kan återställas.
-    }
   }
 
   void _goToHome(AppUser user) {
@@ -86,183 +69,149 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _loginWithGoogle() async {
-    setState(() {
-      _error = null;
-      _loading = true;
-    });
-    try {
-      final user = await AuthService.signInWithGoogle();
-      if (!mounted) return;
-      if (user == null) {
-        setState(() {
-          _loading = false;
-          _error = 'Inloggningen avbröts.';
-        });
-        return;
-      }
-      setState(() => _loading = false);
-      _goToHome(user);
-    } on GoogleSignInRedirectStarted {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error = null;
-        });
-      }
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        final message = switch (e.code) {
-          'unauthorized-domain' =>
-            'Domänen är inte tillåten för Firebase Auth. Lägg till den under Authentication -> Settings -> Authorized domains.',
-          'operation-not-allowed' =>
-            'Google-inloggning är inte aktiverad i Firebase Authentication.',
-          'missing-email' => e.message ?? 'Google-kontot saknar e-postadress.',
-          _ => 'Google-inloggning misslyckades: ${e.message ?? e.code}',
-        };
-        setState(() {
-          _error = message;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Google-inloggning misslyckades: $e';
-          _loading = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.dayColor.withOpacity(0.3),
-              AppTheme.dayColor.withOpacity(0.1),
-            ],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient),
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'My Mirai',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.dayColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Logga in för att fortsätta',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: AppTheme.glassCard(context: context),
+          child: Stack(
+            children: [
+              Positioned(top: -80, left: -40, child: _orb(220, 0.22)),
+              Positioned(bottom: -90, right: -40, child: _orb(250, 0.16)),
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        TextField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: 'E-post',
-                            hintText: 'namn@exempel.se',
-                            prefixIcon: Icon(Icons.email_outlined),
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            labelText: 'Lösenord',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                        Container(
+                          width: 86,
+                          height: 86,
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.primaryGradient,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withOpacity(0.35),
+                                blurRadius: 24,
+                                offset: const Offset(0, 10),
                               ),
-                              onPressed: () {
-                                setState(() =>
-                                    _obscurePassword = !_obscurePassword);
-                              },
-                            ),
-                            border: const OutlineInputBorder(),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.auto_stories_rounded,
+                            size: 42,
+                            color: Colors.white,
                           ),
                         ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 16),
-                          Text(
-                            _error!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                              fontSize: 14,
-                            ),
+                        const SizedBox(height: 18),
+                        Text(
+                          'My Mirai',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
-                        ],
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          onPressed: _loading ? null : _login,
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Lär smartare med AI-stöd, checklistor och gamification.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Colors.black.withOpacity(0.65),
                           ),
-                          child: _loading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
+                        ),
+                        const SizedBox(height: 28),
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: AppTheme.glassCard(context: context),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Logga in',
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              TextField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: const InputDecoration(
+                                  labelText: 'E-post',
+                                  hintText: 'namn@exempel.se',
+                                  prefixIcon: Icon(Icons.email_outlined),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              TextField(
+                                controller: _passwordController,
+                                obscureText: _obscurePassword,
+                                decoration: InputDecoration(
+                                  labelText: 'Lösenord',
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    onPressed: () {
+                                      setState(() => _obscurePassword = !_obscurePassword);
+                                    },
                                   ),
-                                )
-                              : const Text('Logga in'),
-                        ),
-                        const SizedBox(height: 16),
-                        const Row(
-                          children: [
-                            Expanded(child: Divider()),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('eller'),
-                            ),
-                            Expanded(child: Divider()),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: _loading ? null : _loginWithGoogle,
-                          icon: const Icon(Icons.g_mobiledata, size: 24),
-                          label: const Text('Logga in med Google'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                              ),
+                              if (_error != null) ...[
+                                const SizedBox(height: 14),
+                                Text(
+                                  _error!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 22),
+                              FilledButton(
+                                onPressed: _loading ? null : _login,
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                                child: _loading
+                                    ? const SizedBox(
+                                        height: 22,
+                                        width: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text('Fortsätt'),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _orb(double size, double opacity) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.primary.withOpacity(opacity),
       ),
     );
   }
