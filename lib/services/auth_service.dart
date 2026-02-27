@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:my_mirai/core/models.dart';
 
@@ -29,20 +30,27 @@ class AuthService {
   /// Logga in med Google (Firebase Auth).
   /// Skapar användare i Firestore om den inte finns.
   static Future<AppUser?> signInWithGoogle() async {
-    final googleSignIn = GoogleSignIn(
-      scopes: ['email', 'profile'],
-      clientId: '291304286696-phbl13h2pc1qndhdm3vm77rk61nernlh.apps.googleusercontent.com',
-    );
-    final googleUser = await googleSignIn.signIn();
-    if (googleUser == null) return null;
+    UserCredential userCred;
+    if (kIsWeb) {
+      // På webben använder vi Firebase Auth popup-flöde för att undvika
+      // OAuth redirect_uri-mismatch med manuellt clientId.
+      final provider = GoogleAuthProvider()
+        ..addScope('email')
+        ..addScope('profile');
+      userCred = await _auth.signInWithPopup(provider);
+    } else {
+      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return null;
 
-    final googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      userCred = await _auth.signInWithCredential(credential);
+    }
 
-    final userCred = await _auth.signInWithCredential(credential);
     final fbUser = userCred.user;
     if (fbUser == null) return null;
 
