@@ -309,7 +309,7 @@ class MedcalcEngine {
           unit: 'ml',
           hint: 't.ex. 1000',
           min: ExactDecimal._(BigInt.from(1000)),
-          max: ExactDecimal._(BigInt.from(500000000)),
+          max: ExactDecimal._(BigInt.from(5000000000)),
         ),
         MedcalcInputDefinition(
           key: 'timeHours',
