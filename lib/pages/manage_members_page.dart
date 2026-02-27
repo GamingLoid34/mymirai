@@ -20,6 +20,9 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
   final _passwordController = TextEditingController();
   int _schoolYear = 5;
   UserRole _role = UserRole.barn;
+  EducationLevel _educationLevel = EducationLevel.grundskola;
+  bool _enableNursingProgram = false;
+  bool _medcalcEnabled = true;
   int _color = 0xFF4FC3F7;
   bool _loading = false;
 
@@ -50,6 +53,10 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
 
     setState(() => _loading = true);
     try {
+      final effectiveEducationLevel =
+          _role == UserRole.barn ? EducationLevel.grundskola : _educationLevel;
+      final canEnableStudyPrograms = effectiveEducationLevel.isEligibleForStudyPrograms;
+
       await _firestore.collection('users').add({
         'name': name,
         'email': email,
@@ -57,6 +64,13 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
         'color': _color,
         'role': _role.name,
         if (_role == UserRole.barn) 'schoolYear': _schoolYear,
+        'educationLevel': effectiveEducationLevel.name,
+        'activePrograms': canEnableStudyPrograms && _enableNursingProgram
+            ? [AppUser.nursingProgramId]
+            : <String>[],
+        'featureFlags': {
+          'medcalc': canEnableStudyPrograms ? _medcalcEnabled : false,
+        },
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -83,55 +97,77 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
       appBar: AppBar(
         title: const Text('Hantera medlemmar'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Lägg till medlem',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Namn',
-                border: OutlineInputBorder(),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Lägg till medlem',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'E-post',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Namn',
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Lösenord',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'E-post',
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Lösenord',
+                ),
+              ),
             const SizedBox(height: 16),
             // Roll
-            DropdownButtonFormField<UserRole>(
+              DropdownButtonFormField<UserRole>(
               value: _role,
-              decoration: const InputDecoration(
-                labelText: 'Roll',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Roll'),
               items: UserRole.values
                   .map((r) => DropdownMenuItem(value: r, child: Text(r.label)))
                   .toList(),
-              onChanged: (v) => setState(() => _role = v ?? UserRole.barn),
+              onChanged: (v) {
+                setState(() {
+                  _role = v ?? UserRole.barn;
+                  if (_role == UserRole.barn) {
+                    _educationLevel = EducationLevel.grundskola;
+                    _enableNursingProgram = false;
+                  }
+                });
+              },
             ),
-            if (_role == UserRole.barn) ...[
+            const SizedBox(height: 12),
+              DropdownButtonFormField<EducationLevel>(
+              value: _educationLevel,
+              decoration: const InputDecoration(labelText: 'Utbildningsnivå'),
+              items: EducationLevel.values
+                  .map(
+                    (level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(level.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: _role == UserRole.barn
+                  ? null
+                  : (level) => setState(
+                        () => _educationLevel = level ?? EducationLevel.grundskola,
+                      ),
+            ),
+              if (_role == UserRole.barn) ...[
               const SizedBox(height: 16),
               Text('Årskurs: $_schoolYear'),
               Slider(
@@ -143,8 +179,24 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                 onChanged: (v) => setState(() => _schoolYear = v.round()),
               ),
             ],
-            const SizedBox(height: 16),
-            Wrap(
+              if (_educationLevel.isEligibleForStudyPrograms) ...[
+              const SizedBox(height: 12),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Aktivera Sjuksköterskeprogrammet'),
+                value: _enableNursingProgram,
+                onChanged: (value) =>
+                    setState(() => _enableNursingProgram = value),
+              ),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Aktivera Läkemedelsberäkning'),
+                value: _medcalcEnabled,
+                onChanged: (value) => setState(() => _medcalcEnabled = value),
+              ),
+            ],
+              const SizedBox(height: 16),
+              Wrap(
               spacing: 8,
               children: _colors.map((c) {
                 return GestureDetector(
@@ -155,14 +207,19 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                     decoration: BoxDecoration(
                       color: Color(c),
                       shape: BoxShape.circle,
-                      border: _color == c ? Border.all(width: 3, color: Colors.black) : null,
+                        border: _color == c
+                            ? Border.all(
+                                width: 3,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              )
+                            : null,
                     ),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
-            FilledButton(
+              const SizedBox(height: 24),
+              FilledButton(
               onPressed: _loading ? null : _addMember,
               child: _loading
                   ? const SizedBox(
@@ -172,13 +229,13 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                     )
                   : const Text('Lägg till'),
             ),
-            const SizedBox(height: 32),
-            Text(
+              const SizedBox(height: 32),
+              Text(
               'Nuvarande medlemmar',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
-            StreamBuilder<QuerySnapshot>(
+              const SizedBox(height: 8),
+              StreamBuilder<QuerySnapshot>(
               stream: _firestore.collection('users').snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
@@ -193,16 +250,25 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                 return Column(
                   children: docs.map((doc) {
                     final u = AppUser.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+                    final level = u.educationLevel.label;
+                    final nursing = u.hasNursingProgram ? ' • Sjuksköterska' : '';
+                    final initial = u.name.isNotEmpty ? u.name[0].toUpperCase() : '?';
                     return ListTile(
-                      leading: CircleAvatar(backgroundColor: Color(u.color), child: Text(u.name[0].toUpperCase())),
+                      leading: CircleAvatar(
+                        backgroundColor: Color(u.color),
+                        child: Text(initial),
+                      ),
                       title: Text(u.name),
-                      subtitle: Text('${u.role.label}${u.schoolYear != null ? " • Årskurs ${u.schoolYear}" : ""}'),
+                      subtitle: Text(
+                        '${u.role.label}${u.schoolYear != null ? " • Årskurs ${u.schoolYear}" : ""} • $level$nursing',
+                      ),
                     );
                   }).toList(),
                 );
               },
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

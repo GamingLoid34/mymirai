@@ -25,8 +25,51 @@ enum UserRole {
   }
 }
 
+/// Utbildningsnivå för att styra vilka moduler som visas.
+enum EducationLevel {
+  grundskola,
+  gymnasie,
+  universitet,
+  vuxenutbildning;
+
+  String get label {
+    switch (this) {
+      case EducationLevel.grundskola:
+        return 'Grundskola';
+      case EducationLevel.gymnasie:
+        return 'Gymnasie';
+      case EducationLevel.universitet:
+        return 'Universitet';
+      case EducationLevel.vuxenutbildning:
+        return 'Vuxenutbildning';
+    }
+  }
+
+  bool get isEligibleForStudyPrograms {
+    return this == EducationLevel.gymnasie ||
+        this == EducationLevel.universitet ||
+        this == EducationLevel.vuxenutbildning;
+  }
+
+  static EducationLevel fromString(String? value) {
+    switch (value?.toLowerCase()) {
+      case 'gymnasie':
+        return EducationLevel.gymnasie;
+      case 'universitet':
+        return EducationLevel.universitet;
+      case 'vuxenutbildning':
+        return EducationLevel.vuxenutbildning;
+      case 'grundskola':
+      default:
+        return EducationLevel.grundskola;
+    }
+  }
+}
+
 /// Användare (Firestore: users).
 class AppUser {
+  static const nursingProgramId = 'nursing_rn';
+
   final String id;
   final String name;
   final String email;
@@ -34,6 +77,9 @@ class AppUser {
   final int color;
   final UserRole role;
   final int? schoolYear; // 1–9 för barn
+  final EducationLevel educationLevel;
+  final List<String> activePrograms;
+  final bool medcalcEnabled;
 
   AppUser({
     required this.id,
@@ -43,13 +89,42 @@ class AppUser {
     required this.color,
     required this.role,
     this.schoolYear,
+    required this.educationLevel,
+    required this.activePrograms,
+    required this.medcalcEnabled,
   });
 
   bool get isBarn => role == UserRole.barn;
   bool get isForalder => role == UserRole.foralder;
   bool get isAdmin => role == UserRole.admin;
+  bool get hasNursingProgram => activePrograms.contains(nursingProgramId);
+  bool get canSeeStudyPrograms =>
+      educationLevel.isEligibleForStudyPrograms &&
+      medcalcEnabled &&
+      hasNursingProgram;
 
   factory AppUser.fromMap(String id, Map<String, dynamic> m) {
+    final programsRaw = m['activePrograms'];
+    final programs = <String>[];
+    if (programsRaw is List) {
+      for (final p in programsRaw) {
+        final value = p.toString().trim();
+        if (value.isNotEmpty) programs.add(value);
+      }
+    }
+
+    final featureFlags = m['featureFlags'];
+    bool medcalcEnabled = true;
+    if (featureFlags is Map<String, dynamic>) {
+      final value = featureFlags['medcalc'];
+      if (value is bool) medcalcEnabled = value;
+    } else if (featureFlags is Map) {
+      final value = featureFlags['medcalc'];
+      if (value is bool) medcalcEnabled = value;
+    } else if (m['medcalcEnabled'] is bool) {
+      medcalcEnabled = m['medcalcEnabled'] as bool;
+    }
+
     return AppUser(
       id: id,
       name: m['name']?.toString() ?? '',
@@ -58,6 +133,9 @@ class AppUser {
       color: (m['color'] is int) ? m['color'] as int : 0xFF4FC3F7,
       role: UserRole.fromString(m['role']?.toString()) ?? UserRole.barn,
       schoolYear: m['schoolYear'] != null ? (m['schoolYear'] is int ? m['schoolYear'] as int : int.tryParse(m['schoolYear'].toString())) : null,
+      educationLevel: EducationLevel.fromString(m['educationLevel']?.toString()),
+      activePrograms: programs,
+      medcalcEnabled: medcalcEnabled,
     );
   }
 
@@ -68,6 +146,11 @@ class AppUser {
     'color': color,
     'role': role.name,
     if (schoolYear != null) 'schoolYear': schoolYear,
+    'educationLevel': educationLevel.name,
+    'activePrograms': activePrograms,
+    'featureFlags': {
+      'medcalc': medcalcEnabled,
+    },
   };
 }
 

@@ -34,11 +34,7 @@ dependencies:
 
   # Firebase
   firebase_core: ^3.8.1
-  firebase_auth: ^5.3.3
   cloud_firestore: ^5.5.0
-
-  # Google Sign-In
-  google_sign_in: ^6.2.2
 
   # AI & nätverk
   http: ^1.2.2

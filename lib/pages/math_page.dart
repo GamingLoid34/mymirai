@@ -77,74 +77,78 @@ class _MathPageState extends State<MathPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Svårighetsgrad: årskurs $_schoolYear',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: AppTheme.glassCard(context: context),
-              child: Column(
-                children: [
-                  Text(
-                    '$_a + $_b = ?',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Svårighetsgrad: årskurs $_schoolYear',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.mutedText(context),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _answerController,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(
-                      hintText: 'Svara här',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (!_checked)
-                    FilledButton(
-                      onPressed: _check,
-                      child: const Text('Kolla'),
-                    )
-                  else ...[
-                    Icon(
-                      _correct ? Icons.check_circle : Icons.cancel,
-                      color: _correct ? Colors.green : Colors.red,
-                      size: 48,
-                    ),
-                    Text(_correct ? 'Rätt!' : 'Fel. Svaret var $_answer'),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _newProblem,
-                      child: const Text('Nästa tal'),
-                    ),
-                  ],
-                ],
               ),
-            ),
-            const SizedBox(height: 32),
-            OutlinedButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => MathAiPage(
-                    currentUser: widget.currentUser,
-                    selectedChild: widget.selectedChild,
-                    schoolYear: _schoolYear,
-                  ),
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: AppTheme.glassCard(context: context),
+                child: Column(
+                  children: [
+                    Text(
+                      '$_a + $_b = ?',
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _answerController,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                        hintText: 'Svara här',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (!_checked)
+                      FilledButton(
+                        onPressed: _check,
+                        child: const Text('Kolla'),
+                      )
+                    else ...[
+                      Icon(
+                        _correct ? Icons.check_circle : Icons.cancel,
+                        color: _correct ? Colors.green : Colors.red,
+                        size: 48,
+                      ),
+                      Text(_correct ? 'Rätt!' : 'Fel. Svaret var $_answer'),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _newProblem,
+                        child: const Text('Nästa tal'),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              icon: const Icon(Icons.psychology),
-              label: const Text('AI – Läs och räkna'),
-            ),
-          ],
+              const SizedBox(height: 32),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MathAiPage(
+                      currentUser: widget.currentUser,
+                      selectedChild: widget.selectedChild,
+                      schoolYear: _schoolYear,
+                    ),
+                  ),
+                ),
+                icon: const Icon(Icons.psychology),
+                label: const Text('AI – Läs och räkna'),
+              ),
+            ],
+          ),
         ),
       ),
     );
