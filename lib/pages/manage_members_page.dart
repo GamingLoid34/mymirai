@@ -97,49 +97,45 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
       appBar: AppBar(
         title: const Text('Hantera medlemmar'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Lägg till medlem',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Namn',
-                border: OutlineInputBorder(),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Lägg till medlem',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'E-post',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Namn',
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Lösenord',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'E-post',
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Lösenord',
+                ),
+              ),
             const SizedBox(height: 16),
             // Roll
-            DropdownButtonFormField<UserRole>(
+              DropdownButtonFormField<UserRole>(
               value: _role,
-              decoration: const InputDecoration(
-                labelText: 'Roll',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Roll'),
               items: UserRole.values
                   .map((r) => DropdownMenuItem(value: r, child: Text(r.label)))
                   .toList(),
@@ -154,12 +150,9 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
               },
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<EducationLevel>(
+              DropdownButtonFormField<EducationLevel>(
               value: _educationLevel,
-              decoration: const InputDecoration(
-                labelText: 'Utbildningsnivå',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Utbildningsnivå'),
               items: EducationLevel.values
                   .map(
                     (level) => DropdownMenuItem(
@@ -174,7 +167,7 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                         () => _educationLevel = level ?? EducationLevel.grundskola,
                       ),
             ),
-            if (_role == UserRole.barn) ...[
+              if (_role == UserRole.barn) ...[
               const SizedBox(height: 16),
               Text('Årskurs: $_schoolYear'),
               Slider(
@@ -186,7 +179,7 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                 onChanged: (v) => setState(() => _schoolYear = v.round()),
               ),
             ],
-            if (_educationLevel.isEligibleForStudyPrograms) ...[
+              if (_educationLevel.isEligibleForStudyPrograms) ...[
               const SizedBox(height: 12),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
@@ -202,8 +195,8 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                 onChanged: (value) => setState(() => _medcalcEnabled = value),
               ),
             ],
-            const SizedBox(height: 16),
-            Wrap(
+              const SizedBox(height: 16),
+              Wrap(
               spacing: 8,
               children: _colors.map((c) {
                 return GestureDetector(
@@ -214,14 +207,19 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                     decoration: BoxDecoration(
                       color: Color(c),
                       shape: BoxShape.circle,
-                      border: _color == c ? Border.all(width: 3, color: Colors.black) : null,
+                        border: _color == c
+                            ? Border.all(
+                                width: 3,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              )
+                            : null,
                     ),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
-            FilledButton(
+              const SizedBox(height: 24),
+              FilledButton(
               onPressed: _loading ? null : _addMember,
               child: _loading
                   ? const SizedBox(
@@ -231,13 +229,13 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                     )
                   : const Text('Lägg till'),
             ),
-            const SizedBox(height: 32),
-            Text(
+              const SizedBox(height: 32),
+              Text(
               'Nuvarande medlemmar',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
-            StreamBuilder<QuerySnapshot>(
+              const SizedBox(height: 8),
+              StreamBuilder<QuerySnapshot>(
               stream: _firestore.collection('users').snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
@@ -268,8 +266,9 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                   }).toList(),
                 );
               },
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
         : profile.name.trim().split(' ').first;
 
     return Container(
-      decoration: BoxDecoration(gradient: AppTheme.pageGradient),
+      decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 26),
         child: Column(
@@ -142,7 +142,7 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         'Bygg upp dina kunskaper steg för steg.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.black.withOpacity(0.62),
+                          color: AppTheme.mutedText(context),
                         ),
                       ),
                     ],
@@ -257,7 +257,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const Spacer(),
-                      Icon(Icons.more_horiz, color: Colors.black.withOpacity(0.45)),
+                      Icon(Icons.more_horiz, color: AppTheme.subtleText(context)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -342,21 +342,24 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Sjuksköterskeprogrammet',
-                              style: TextStyle(
+                                style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 16,
                               ),
                             ),
-                            SizedBox(height: 2),
-                            Text(
+                            const SizedBox(height: 2),
+                              Text(
                               'Läkemedelsberäkning (Säker)',
-                              style: TextStyle(fontSize: 13),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.mutedText(context),
+                                ),
                             ),
                           ],
                         ),
@@ -460,7 +463,7 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.black.withOpacity(0.62),
+                    color: AppTheme.mutedText(context),
                   ),
                 ),
               ],
@@ -486,7 +489,7 @@ class _HomePageState extends State<HomePage> {
             time,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: Colors.black.withOpacity(0.68),
+              color: AppTheme.mutedText(context),
             ),
           ),
         ),
@@ -508,7 +511,10 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(color: Colors.black.withOpacity(0.62), fontSize: 12),
+                  style: TextStyle(
+                    color: AppTheme.mutedText(context),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -560,7 +566,9 @@ class _DayPill extends StatelessWidget {
         color: selected ? AppTheme.primary : Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: selected ? AppTheme.primary : Colors.black.withOpacity(0.06),
+          color: selected
+              ? AppTheme.primary
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
         ),
       ),
       child: Column(
@@ -569,7 +577,7 @@ class _DayPill extends StatelessWidget {
             day,
             style: TextStyle(
               fontSize: 11,
-              color: selected ? Colors.white : Colors.black.withOpacity(0.6),
+              color: selected ? Colors.white : AppTheme.mutedText(context),
             ),
           ),
           const SizedBox(height: 4),
@@ -577,7 +585,9 @@ class _DayPill extends StatelessWidget {
             date,
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : Colors.black.withOpacity(0.8),
+              color: selected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.82),
             ),
           ),
         ],

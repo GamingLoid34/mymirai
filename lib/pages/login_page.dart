@@ -73,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.pageGradient),
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
         child: SafeArea(
           child: Stack(
             children: [
@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                           'Lär smartare med AI-stöd, checklistor och gamification.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.black.withOpacity(0.65),
+                            color: AppTheme.mutedText(context),
                           ),
                         ),
                         const SizedBox(height: 28),

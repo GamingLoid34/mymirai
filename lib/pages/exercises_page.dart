@@ -43,47 +43,53 @@ class _ExercisesPageState extends State<ExercisesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Kort')),
-      body: Column(
-        children: [
-          SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 0, label: Text('Nya'), icon: Icon(Icons.fiber_new)),
-              ButtonSegment(value: 1, label: Text('Svåra'), icon: Icon(Icons.warning)),
-              ButtonSegment(value: 2, label: Text('Alla'), icon: Icon(Icons.apps)),
-            ],
-            selected: {_filterIndex},
-            onSelectionChanged: (s) => setState(() {
-              _filterIndex = s.first;
-              _currentIndex = 0;
-            }),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('homeworks').snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final allCards = <MapEntry<String, Flashcard>>[];
-                for (final doc in snapshot.data!.docs) {
-                  final hw = Homework.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-                  for (var i = 0; i < hw.flashcards.length; i++) {
-                    allCards.add(MapEntry('${doc.id}_$i', hw.flashcards[i]));
-                  }
-                }
-                final cards = _filter(allCards);
-                if (cards.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'Inga kort att öva på',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                  );
-                }
-                final idx = _currentIndex.clamp(0, cards.length - 1);
-                return _buildCardView(cards, idx);
-              },
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('Nya'), icon: Icon(Icons.fiber_new)),
+                  ButtonSegment(value: 1, label: Text('Svåra'), icon: Icon(Icons.warning)),
+                  ButtonSegment(value: 2, label: Text('Alla'), icon: Icon(Icons.apps)),
+                ],
+                selected: {_filterIndex},
+                onSelectionChanged: (s) => setState(() {
+                  _filterIndex = s.first;
+                  _currentIndex = 0;
+                }),
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('homeworks').snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                  final allCards = <MapEntry<String, Flashcard>>[];
+                  for (final doc in snapshot.data!.docs) {
+                    final hw = Homework.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+                    for (var i = 0; i < hw.flashcards.length; i++) {
+                      allCards.add(MapEntry('${doc.id}_$i', hw.flashcards[i]));
+                    }
+                  }
+                  final cards = _filter(allCards);
+                  if (cards.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'Inga kort att öva på',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    );
+                  }
+                  final idx = _currentIndex.clamp(0, cards.length - 1);
+                  return _buildCardView(cards, idx);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

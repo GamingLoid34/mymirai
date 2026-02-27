@@ -13,7 +13,7 @@ class StudyProgramsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Studieprogram')),
       body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.pageGradient),
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -27,7 +27,7 @@ class StudyProgramsPage extends StatelessWidget {
             Text(
               'Specialiserade spår för gymnasie, universitet och vuxenutbildning.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.black.withOpacity(0.62),
+                    color: AppTheme.mutedText(context),
                   ),
             ),
             const SizedBox(height: 16),
@@ -115,7 +115,7 @@ class _ProgramCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.black.withOpacity(0.6),
+                            color: AppTheme.mutedText(context),
                           ),
                     ),
                   ],
@@ -123,7 +123,7 @@ class _ProgramCard extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.black.withOpacity(0.45),
+                color: AppTheme.subtleText(context),
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_mirai/core/app_theme.dart';
 import 'package:my_mirai/core/models.dart';
 import 'package:my_mirai/services/groq_service.dart';
 
@@ -97,43 +98,44 @@ class _MathAiPageState extends State<MathAiPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('AI – Läs och räkna')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_loading)
-              const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
-            else if (_problem != null) ...[
-              Card(
-                child: Padding(
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_loading)
+                const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+              else if (_problem != null) ...[
+                Container(
                   padding: const EdgeInsets.all(20),
+                  decoration: AppTheme.glassCard(context: context),
                   child: Text(_problem!, style: Theme.of(context).textTheme.titleMedium),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _answerController,
-                decoration: const InputDecoration(
-                  labelText: 'Ditt svar',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _answerController,
+                  decoration: const InputDecoration(
+                    labelText: 'Ditt svar',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              if (!_answered)
-                FilledButton(onPressed: _check, child: const Text('Kolla svar'))
-              else ...[
-                Icon(
-                  _correct ? Icons.check_circle : Icons.cancel,
-                  color: _correct ? Colors.green : Colors.red,
-                  size: 48,
-                ),
-                Text(_correct ? 'Rätt!' : 'Fel. Rätt svar: $_correctAnswer'),
-                const SizedBox(height: 8),
-                TextButton(onPressed: _generate, child: const Text('Nytt problem')),
+                const SizedBox(height: 16),
+                if (!_answered)
+                  FilledButton(onPressed: _check, child: const Text('Kolla svar'))
+                else ...[
+                  Icon(
+                    _correct ? Icons.check_circle : Icons.cancel,
+                    color: _correct ? Colors.green : Colors.red,
+                    size: 48,
+                  ),
+                  Text(_correct ? 'Rätt!' : 'Fel. Rätt svar: $_correctAnswer'),
+                  const SizedBox(height: 8),
+                  TextButton(onPressed: _generate, child: const Text('Nytt problem')),
+                ],
               ],
             ],
-          ],
+          ),
         ),
       ),
     );

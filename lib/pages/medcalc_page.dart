@@ -17,7 +17,7 @@ class NursingProgramPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Sjuksköterskeprogrammet')),
       body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.pageGradient),
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -31,7 +31,7 @@ class NursingProgramPage extends StatelessWidget {
             Text(
               'Välj en modul för träning med fokus på säkra beräkningar.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.black.withOpacity(0.62),
+                    color: AppTheme.mutedText(context),
                   ),
             ),
             const SizedBox(height: 16),
@@ -112,7 +112,7 @@ class _MedcalcLandingPageState extends State<MedcalcLandingPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Läkemedelsberäkning (Säker)')),
       body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.pageGradient),
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -220,7 +220,7 @@ class _ModeCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.black.withOpacity(0.62),
+                          color: AppTheme.mutedText(context),
                         ),
                   ),
                 ],
@@ -364,7 +364,7 @@ class _MedcalcPracticePageState extends State<MedcalcPracticePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Träna - Läkemedelsberäkning')),
       body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.pageGradient),
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -395,7 +395,7 @@ class _MedcalcPracticePageState extends State<MedcalcPracticePage> {
             Text(
               _template.description,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.black.withOpacity(0.62),
+                    color: AppTheme.mutedText(context),
                   ),
             ),
             const SizedBox(height: 14),
@@ -703,7 +703,7 @@ class _MedcalcExamPageState extends State<MedcalcExamPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Tentamode - Läkemedelsberäkning')),
       body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.pageGradient),
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
         child: _loadingQuestions
             ? _buildLoadingView(context)
             : (_completed ? _buildSummary(context) : _buildQuestionView(context)),

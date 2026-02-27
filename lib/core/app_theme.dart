@@ -10,6 +10,7 @@ class AppTheme {
   static const Color secondary = Color(0xFFA79CFF);
   static const Color accent = Color(0xFFDCD5FF);
   static const Color background = Color(0xFFF5F4FF);
+  static const Color darkBackground = Color(0xFF131126);
   static const Color textStrong = Color(0xFF26223C);
 
   /// Dyslexivänligt typsnitt.
@@ -98,6 +99,23 @@ class AppTheme {
           GoogleFonts.lexend(fontWeight: FontWeight.w600),
         ),
       ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return primary;
+            return textStrong;
+          }),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return primary.withOpacity(0.12);
+            }
+            return Colors.white;
+          }),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: Colors.black.withOpacity(0.08)),
+          ),
+        ),
+      ),
     );
   }
 
@@ -111,6 +129,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: colorScheme,
+      scaffoldBackgroundColor: darkBackground,
       textTheme: GoogleFonts.lexendTextTheme(
         ThemeData.dark().textTheme,
       ),
@@ -138,18 +157,57 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         color: const Color(0xFF201B35),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        height: 72,
+        backgroundColor: const Color(0xFF1A1730),
+        indicatorColor: primary.withOpacity(0.28),
+        labelTextStyle: WidgetStatePropertyAll(
+          GoogleFonts.lexend(fontWeight: FontWeight.w600),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return Colors.white;
+            return Colors.white.withOpacity(0.85);
+          }),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return primary.withOpacity(0.45);
+            }
+            return const Color(0xFF201B35);
+          }),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: Colors.white.withOpacity(0.12)),
+          ),
+        ),
+      ),
     );
   }
 
-  static LinearGradient get pageGradient => const LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFFE7E1FF),
-      Color(0xFFF6F3FF),
-      Color(0xFFFFFFFF),
-    ],
-  );
+  static LinearGradient pageGradient(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      return const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF191632),
+          Color(0xFF15122A),
+          Color(0xFF100E22),
+        ],
+      );
+    }
+    return const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color(0xFFE7E1FF),
+        Color(0xFFF6F3FF),
+        Color(0xFFFFFFFF),
+      ],
+    );
+  }
 
   static LinearGradient get primaryGradient => const LinearGradient(
     begin: Alignment.topLeft,
@@ -172,7 +230,7 @@ class AppTheme {
       color: (isDark ? const Color(0xFF201B35) : Colors.white).withOpacity(opacity),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.06),
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
         width: 1,
       ),
       boxShadow: [
@@ -183,5 +241,13 @@ class AppTheme {
         ),
       ],
     );
+  }
+
+  static Color mutedText(BuildContext context) {
+    return Theme.of(context).colorScheme.onSurface.withOpacity(0.66);
+  }
+
+  static Color subtleText(BuildContext context) {
+    return Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
   }
 }

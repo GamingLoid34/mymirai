@@ -230,79 +230,87 @@ class _WorkPageState extends State<WorkPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Läxor')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Titel', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _textController,
-              maxLines: 6,
-              decoration: const InputDecoration(
-                labelText: 'Text (eller använd kamera/pptx nedan)',
-                border: OutlineInputBorder(),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.pageGradient(context)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Titel'),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                IconButton(onPressed: _pickImage, icon: const Icon(Icons.camera_alt), tooltip: 'Foto'),
-                IconButton(onPressed: _pickPptx, icon: const Icon(Icons.slideshow), tooltip: 'Ladda upp .pptx'),
-                IconButton(onPressed: _speak, icon: const Icon(Icons.volume_up), tooltip: 'Lyssna (TTS)'),
-              ],
-            ),
-            if (_error != null) ...[
-              Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _textController,
+                maxLines: 6,
+                decoration: const InputDecoration(
+                  labelText: 'Text (eller använd kamera/pptx nedan)',
+                ),
+              ),
               const SizedBox(height: 8),
-            ],
-            Wrap(
-              spacing: 8,
-              children: [
-                FilledButton.icon(onPressed: _loading ? null : _aiSummarize, icon: const Icon(Icons.summarize, size: 18), label: const Text('AI sammanfatta')),
-                FilledButton.icon(onPressed: _loading ? null : _aiSubsteps, icon: const Icon(Icons.checklist, size: 18), label: const Text('Checklista')),
-                FilledButton.icon(onPressed: _loading ? null : _aiStudyQuestions, icon: const Icon(Icons.quiz, size: 18), label: const Text('Frågor')),
-                FilledButton.icon(onPressed: _loading ? null : _aiGlosor, icon: const Icon(Icons.translate, size: 18), label: const Text('Glosor')),
-              ],
-            ),
-            if (_loading) const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
-            if (_aiSummary != null) ...[
-              const SizedBox(height: 16),
-              Text('Sammanfattning', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: AppTheme.glassCard(context: context),
-                child: MarkdownBody(data: _aiSummary!),
+              Row(
+                children: [
+                  IconButton(onPressed: _pickImage, icon: const Icon(Icons.camera_alt), tooltip: 'Foto'),
+                  IconButton(onPressed: _pickPptx, icon: const Icon(Icons.slideshow), tooltip: 'Ladda upp .pptx'),
+                  IconButton(onPressed: _speak, icon: const Icon(Icons.volume_up), tooltip: 'Lyssna (TTS)'),
+                ],
               ),
+              if (_error != null) ...[
+                Text(
+                  _error!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Wrap(
+                spacing: 8,
+                children: [
+                  FilledButton.icon(onPressed: _loading ? null : _aiSummarize, icon: const Icon(Icons.summarize, size: 18), label: const Text('AI sammanfatta')),
+                  FilledButton.icon(onPressed: _loading ? null : _aiSubsteps, icon: const Icon(Icons.checklist, size: 18), label: const Text('Checklista')),
+                  FilledButton.icon(onPressed: _loading ? null : _aiStudyQuestions, icon: const Icon(Icons.quiz, size: 18), label: const Text('Frågor')),
+                  FilledButton.icon(onPressed: _loading ? null : _aiGlosor, icon: const Icon(Icons.translate, size: 18), label: const Text('Glosor')),
+                ],
+              ),
+              if (_loading) const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
+              if (_aiSummary != null) ...[
+                const SizedBox(height: 16),
+                Text('Sammanfattning', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: AppTheme.glassCard(context: context),
+                  child: MarkdownBody(data: _aiSummary!),
+                ),
+              ],
+              if (_substeps.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text('Checklista', style: Theme.of(context).textTheme.titleMedium),
+                ..._substeps.asMap().entries.map((e) => CheckboxListTile(
+                  value: false,
+                  onChanged: (_) {},
+                  title: Text('${e.key + 1}. ${e.value}'),
+                  controlAffinity: ListTileControlAffinity.leading,
+                )),
+              ],
+              if (_flashcards.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text('Kort (${_flashcards.length})', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                ..._flashcards.take(5).map((f) => ListTile(
+                  title: Text(f.front),
+                  subtitle: Text(f.back),
+                )),
+                if (_flashcards.length > 5) Text('... och ${_flashcards.length - 5} till'),
+              ],
+              const SizedBox(height: 24),
+              FilledButton(onPressed: _loading ? null : _saveHomework, child: const Text('Spara läxa')),
             ],
-            if (_substeps.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text('Checklista', style: Theme.of(context).textTheme.titleMedium),
-              ..._substeps.asMap().entries.map((e) => CheckboxListTile(
-                value: false,
-                onChanged: (_) {},
-                title: Text('${e.key + 1}. ${e.value}'),
-                controlAffinity: ListTileControlAffinity.leading,
-              )),
-            ],
-            if (_flashcards.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text('Kort (${_flashcards.length})', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              ..._flashcards.take(5).map((f) => ListTile(
-                title: Text(f.front),
-                subtitle: Text(f.back),
-              )),
-              if (_flashcards.length > 5) Text('... och ${_flashcards.length - 5} till'),
-            ],
-            const SizedBox(height: 24),
-            FilledButton(onPressed: _loading ? null : _saveHomework, child: const Text('Spara läxa')),
-          ],
+          ),
         ),
       ),
     );
