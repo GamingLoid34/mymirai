@@ -30,17 +30,26 @@ jobs:
       - name: Build Flutter web release
         run: flutter build web --release
 
-      - name: Validate Firebase service account secret
-        run: |
-          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_MIRAI_63EAD }}" ]; then
-            echo "Missing secret: FIREBASE_SERVICE_ACCOUNT_MY_MIRAI_63EAD"
-            exit 1
-          fi
-
-      - name: Deploy to Firebase Hosting (live channel)
+      - name: Deploy to Firebase Hosting with service account (live channel)
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_MIRAI_63EAD != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_MIRAI_63EAD }}
           channelId: live
           projectId: my-mirai-63ead
+
+      - name: Deploy to Firebase Hosting with CI token (live channel)
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_MIRAI_63EAD == '' && secrets.FIREBASE_TOKEN != '' }}
+        run: |
+          npx --yes firebase-tools deploy \
+            --only hosting \
+            --project my-mirai-63ead \
+            --token "${{ secrets.FIREBASE_TOKEN }}"
+
+      - name: Fail if Firebase secrets are missing
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_MIRAI_63EAD == '' && secrets.FIREBASE_TOKEN == '' }}
+        run: |
+          echo "Missing Firebase credentials."
+          echo "Set FIREBASE_SERVICE_ACCOUNT_MY_MIRAI_63EAD or FIREBASE_TOKEN in repository secrets."
+          exit 1
