@@ -21,12 +21,37 @@ class _HomePageState extends State<HomePage> {
   AppUser? _selectedChild;
   final List<AppUser> _children = []; // TODO: hämta från Firestore
   int _navIndex = 0;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _navIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   AppUser get _activeProfile {
     if (widget.currentUser.isBarn) return widget.currentUser;
     if (_selectedChild != null) return _selectedChild!;
     if (_children.isNotEmpty) return _children.first;
     return widget.currentUser;
+  }
+
+  void _goToPage(int index) {
+    if (_navIndex == index) return;
+    setState(() => _navIndex = index);
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   @override
@@ -57,8 +82,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _navIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) => setState(() => _navIndex = index),
         children: [
           _buildDashboard(profile),
           WorkPage(
@@ -83,7 +109,7 @@ class _HomePageState extends State<HomePage> {
           NavigationDestination(icon: Icon(Icons.calculate_rounded), label: 'Matte'),
         ],
         selectedIndex: _navIndex,
-        onDestinationSelected: (index) => setState(() => _navIndex = index),
+        onDestinationSelected: _goToPage,
       ),
     );
   }
@@ -156,7 +182,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 10),
                         FilledButton(
-                          onPressed: () => setState(() => _navIndex = 1),
+                          onPressed: () => _goToPage(1),
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: AppTheme.primary,
