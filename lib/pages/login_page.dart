@@ -1,9 +1,9 @@
-import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_mirai/core/app_theme.dart';
 import 'package:my_mirai/core/models.dart';
-import 'package:my_mirai/services/auth_service.dart';
 import 'package:my_mirai/pages/home_page.dart';
+import 'package:my_mirai/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,10 +20,34 @@ class _LoginPageState extends State<LoginPage> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _restoreExistingGoogleSession();
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _restoreExistingGoogleSession() async {
+    try {
+      final user = await AuthService.getSignedInAppUser();
+      if (!mounted || user == null) return;
+      _goToHome(user);
+    } catch (_) {
+      // Ignorera tyst om session inte kan återställas.
+    }
+  }
+
+  void _goToHome(AppUser user) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => HomePage(currentUser: user),
+      ),
+    );
   }
 
   Future<void> _login() async {
@@ -51,11 +75,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       setState(() => _loading = false);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => HomePage(currentUser: user),
-        ),
-      );
+      _goToHome(user);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -72,30 +92,36 @@ class _LoginPageState extends State<LoginPage> {
       _loading = true;
     });
     try {
-      final user = await AuthService.signInWithGoogle().timeout(
-        const Duration(seconds: 60),
-        onTimeout: () {
-          throw TimeoutException('Inloggningen tog för lång tid.');
-        },
-      );
+      final user = await AuthService.signInWithGoogle();
       if (!mounted) return;
       if (user == null) {
         setState(() {
           _loading = false;
-          _error = 'Inloggningen avbröts. Tillåt popup-fönster om de blockeras.';
+          _error = 'Inloggningen avbröts.';
         });
         return;
       }
       setState(() => _loading = false);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => HomePage(currentUser: user),
-        ),
-      );
-    } on TimeoutException catch (e) {
+      _goToHome(user);
+    } on GoogleSignInRedirectStarted {
       if (mounted) {
         setState(() {
-          _error = e.message ?? 'Tidsgräns överskriden';
+          _loading = false;
+          _error = null;
+        });
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        final message = switch (e.code) {
+          'unauthorized-domain' =>
+            'Domänen är inte tillåten för Firebase Auth. Lägg till den under Authentication -> Settings -> Authorized domains.',
+          'operation-not-allowed' =>
+            'Google-inloggning är inte aktiverad i Firebase Authentication.',
+          'missing-email' => e.message ?? 'Google-kontot saknar e-postadress.',
+          _ => 'Google-inloggning misslyckades: ${e.message ?? e.code}',
+        };
+        setState(() {
+          _error = message;
           _loading = false;
         });
       }
