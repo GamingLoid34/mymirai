@@ -5,6 +5,7 @@ import 'package:my_mirai/pages/exercises_page.dart';
 import 'package:my_mirai/pages/login_page.dart';
 import 'package:my_mirai/pages/manage_members_page.dart';
 import 'package:my_mirai/pages/math_page.dart';
+import 'package:my_mirai/pages/study_programs_page.dart';
 import 'package:my_mirai/pages/work_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -281,6 +282,65 @@ class _HomePageState extends State<HomePage> {
                 _buildSubjectChip('Engelska', Icons.translate_rounded, const Color(0xFFBB6BD9)),
               ],
             ),
+            if (widget.currentUser.canSeeStudyPrograms) ...[
+              const SizedBox(height: 20),
+              Text(
+                'Studieprogram',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                borderRadius: BorderRadius.circular(22),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => StudyProgramsPage(currentUser: widget.currentUser),
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: AppTheme.glassCard(context: context),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.school_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Sjuksköterskeprogrammet',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Läkemedelsberäkning (Säker)',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -20,6 +20,9 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
   final _passwordController = TextEditingController();
   int _schoolYear = 5;
   UserRole _role = UserRole.barn;
+  EducationLevel _educationLevel = EducationLevel.grundskola;
+  bool _enableNursingProgram = false;
+  bool _medcalcEnabled = true;
   int _color = 0xFF4FC3F7;
   bool _loading = false;
 
@@ -50,6 +53,10 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
 
     setState(() => _loading = true);
     try {
+      final effectiveEducationLevel =
+          _role == UserRole.barn ? EducationLevel.grundskola : _educationLevel;
+      final canEnableStudyPrograms = effectiveEducationLevel.isEligibleForStudyPrograms;
+
       await _firestore.collection('users').add({
         'name': name,
         'email': email,
@@ -57,6 +64,13 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
         'color': _color,
         'role': _role.name,
         if (_role == UserRole.barn) 'schoolYear': _schoolYear,
+        'educationLevel': effectiveEducationLevel.name,
+        'activePrograms': canEnableStudyPrograms && _enableNursingProgram
+            ? [AppUser.nursingProgramId]
+            : <String>[],
+        'featureFlags': {
+          'medcalc': canEnableStudyPrograms ? _medcalcEnabled : false,
+        },
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +143,36 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
               items: UserRole.values
                   .map((r) => DropdownMenuItem(value: r, child: Text(r.label)))
                   .toList(),
-              onChanged: (v) => setState(() => _role = v ?? UserRole.barn),
+              onChanged: (v) {
+                setState(() {
+                  _role = v ?? UserRole.barn;
+                  if (_role == UserRole.barn) {
+                    _educationLevel = EducationLevel.grundskola;
+                    _enableNursingProgram = false;
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<EducationLevel>(
+              value: _educationLevel,
+              decoration: const InputDecoration(
+                labelText: 'Utbildningsnivå',
+                border: OutlineInputBorder(),
+              ),
+              items: EducationLevel.values
+                  .map(
+                    (level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(level.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: _role == UserRole.barn
+                  ? null
+                  : (level) => setState(
+                        () => _educationLevel = level ?? EducationLevel.grundskola,
+                      ),
             ),
             if (_role == UserRole.barn) ...[
               const SizedBox(height: 16),
@@ -141,6 +184,22 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                 divisions: 8,
                 label: '$_schoolYear',
                 onChanged: (v) => setState(() => _schoolYear = v.round()),
+              ),
+            ],
+            if (_educationLevel.isEligibleForStudyPrograms) ...[
+              const SizedBox(height: 12),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Aktivera Sjuksköterskeprogrammet'),
+                value: _enableNursingProgram,
+                onChanged: (value) =>
+                    setState(() => _enableNursingProgram = value),
+              ),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Aktivera Läkemedelsberäkning'),
+                value: _medcalcEnabled,
+                onChanged: (value) => setState(() => _medcalcEnabled = value),
               ),
             ],
             const SizedBox(height: 16),
@@ -193,10 +252,18 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
                 return Column(
                   children: docs.map((doc) {
                     final u = AppUser.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+                    final level = u.educationLevel.label;
+                    final nursing = u.hasNursingProgram ? ' • Sjuksköterska' : '';
+                    final initial = u.name.isNotEmpty ? u.name[0].toUpperCase() : '?';
                     return ListTile(
-                      leading: CircleAvatar(backgroundColor: Color(u.color), child: Text(u.name[0].toUpperCase())),
+                      leading: CircleAvatar(
+                        backgroundColor: Color(u.color),
+                        child: Text(initial),
+                      ),
                       title: Text(u.name),
-                      subtitle: Text('${u.role.label}${u.schoolYear != null ? " • Årskurs ${u.schoolYear}" : ""}'),
+                      subtitle: Text(
+                        '${u.role.label}${u.schoolYear != null ? " • Årskurs ${u.schoolYear}" : ""} • $level$nursing',
+                      ),
                     );
                   }).toList(),
                 );
