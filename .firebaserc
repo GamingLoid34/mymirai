@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "my-mirai-63ead",
+    "la-familia": "la-familia-5d9f5"
+  },
+  "targets": {
+    "my-mirai-63ead": {
+      "hosting": {
+        "web": ["my-mirai-63ead"]
+      }
+    }
+  }
+}

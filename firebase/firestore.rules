@@ -1,0 +1,32 @@
+rules_version = '2';
+// AKTAS: Detta är La Familias delade ruleset. my_mirai delar projekt med La Familia
+// och båda apparna måste fungera. Reglerna är medvetet permissiva — La Familia
+// hanterar familje-gränser i klientlogiken, inte i Firestore-rules. Om du vill
+// härda detta måste det göras tillsammans med La Familia-teamet och stämmas av
+// mot hela deras datamodell. ÄNDRA INTE denna fil utan att koordinera, och deploya
+// ALDRIG `firestore:rules` från my_mirai-repot — det skriver över La Familia.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // --- C3: Utkast för privata vuxen-dokument (my_mirai) ---
+    // Måste ligga FÖRE wildcard så att mer specifik path matchar först.
+    // KRITISKT: Koordinera med La Familia innan publicering. Deploya ALDRIG
+    // firestore:rules från detta repo — publicera manuellt i Console när det är dags.
+    // Tills dess gäller fortfarande permissiv wildcard nedan i produktion.
+    // Chunk I (My Mirai): user_stats/{uid} + daily/* — ska hårdnas till
+    // request.auth.uid == uid tillsammans med La Familia (nu täcks av wildcard nedan).
+
+    match /documents/{docId} {
+      allow read, delete: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid;
+    }
+
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
